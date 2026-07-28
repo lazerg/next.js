@@ -16,6 +16,9 @@ describe('on-request-error - skip-next-internal-error', () => {
     expect(output).not.toContain('NEXT_REDIRECT')
     expect(output).not.toContain('NEXT_NOT_FOUND')
     expect(output).not.toContain('BAILOUT_TO_CLIENT_SIDE_RENDERING')
+    expect(
+      output.includes('Bail out to client-side rendering: browserOnly()')
+    ).toBe(false)
     // No dynamic usage errors
     expect(output).not.toContain('DYNAMIC_SERVER_USAGE')
     // No react postpone errors
@@ -60,6 +63,11 @@ describe('on-request-error - skip-next-internal-error', () => {
     // No SSR
     it('should not catch next dynamic no-ssr errors', async () => {
       await next.fetch('/client/no-ssr')
+      await assertNoNextjsInternalErrors()
+    })
+
+    it('should not catch browserOnly CSR bailout errors', async () => {
+      await next.fetch('/client/browser-only')
       await assertNoNextjsInternalErrors()
     })
 

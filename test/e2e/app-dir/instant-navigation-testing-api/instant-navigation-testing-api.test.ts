@@ -135,6 +135,28 @@ describe('instant-navigation-testing-api', () => {
     expect(navigationRequests.length).toBe(navigationsAtUnlock)
   })
 
+  it('renders browserOnly content immediately during instant navigation', async () => {
+    const page = await openPage(next, '/')
+    const navigationsBeforeClick = navigationRequests.length
+
+    await instant(page, async () => {
+      await page.click('#link-to-browser-only')
+
+      const content = page.locator('[data-testid="browser-only-content"]')
+      await content.waitFor({ state: 'visible' })
+      expect(await content.textContent()).toBe('browser-only content')
+      expect(
+        await page.locator('[data-testid="browser-only-fallback"]').count()
+      ).toBe(0)
+      expect(navigationRequests.length).toBe(navigationsBeforeClick)
+    })
+
+    expect(
+      await page.locator('[data-testid="browser-only-content"]').textContent()
+    ).toBe('browser-only content')
+    expect(navigationRequests.length).toBe(navigationsBeforeClick)
+  })
+
   it('renders runtime-prefetched content instantly during navigation', async () => {
     const page = await openPage(next, '/')
 
@@ -1290,6 +1312,25 @@ describe('instant-navigation-testing-api - partial prefetching (App Shells)', ()
       const fallback = page.locator('[data-testid="params-fallback"]')
       expect(await fallback.count()).toBe(0)
     })
+  })
+
+  it('renders browserOnly content immediately from a partial prefetch', async () => {
+    const page = await openPage(next, '/')
+    const navigationsBeforeClick = navigationRequests.length
+
+    await instant(page, async () => {
+      await page.click('#browser-only-link')
+
+      const content = page.locator('[data-testid="browser-only-content"]')
+      await content.waitFor({ state: 'visible' })
+      expect(await content.textContent()).toBe('browser-only content')
+      expect(
+        await page.locator('[data-testid="browser-only-fallback"]').count()
+      ).toBe(0)
+      expect(navigationRequests.length).toBe(navigationsBeforeClick)
+    })
+
+    expect(navigationRequests.length).toBe(navigationsBeforeClick)
   })
 })
 

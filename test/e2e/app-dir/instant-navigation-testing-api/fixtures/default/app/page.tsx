@@ -117,6 +117,11 @@ export default function HomePage() {
           </Link>
         </li>
         <li>
+          <Link href="/browser-only" id="link-to-browser-only">
+            Go to browser-only page
+          </Link>
+        </li>
+        <li>
           <a href="/client-fetch-page" id="plain-link-to-client-fetch">
             Go to client fetch page (MPA)
           </a>
