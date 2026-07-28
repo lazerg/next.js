@@ -1458,5 +1458,6 @@
   "1457": "Expected prerender classification data for PPR route \"%s\"",
   "1458": "Expected complete prerender classification for route \"%s\"",
   "1459": "browserOnly()",
-  "1460": "`browserOnly()` requires React 19 or later."
+  "1460": "`browserOnly()` requires React 19 or later.",
+  "1461": "browserOnly() should be wrapped in a suspense boundary at page \"%s\". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout"
 }

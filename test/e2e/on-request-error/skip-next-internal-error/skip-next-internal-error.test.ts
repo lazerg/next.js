@@ -1,4 +1,4 @@
-import { nextTestSetup } from 'e2e-utils'
+import { isReact18, nextTestSetup } from 'e2e-utils'
 
 describe('on-request-error - skip-next-internal-error', () => {
   const { next, skipped } = nextTestSetup({
@@ -92,6 +92,12 @@ describe('on-request-error - skip-next-internal-error', () => {
 
     it('should not catch server component redirect errors', async () => {
       await next.render('/app-route/redirect')
+      await assertNoNextjsInternalErrors()
+    })
+  })
+  ;(isReact18 ? describe.skip : describe)('pages router render', () => {
+    it('should not catch browserOnly CSR bailout errors', async () => {
+      await next.fetch('/browser-only')
       await assertNoNextjsInternalErrors()
     })
   })
