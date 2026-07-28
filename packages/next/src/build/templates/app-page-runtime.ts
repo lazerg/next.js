@@ -930,9 +930,14 @@ export function createAppPageEntrypoint({
             partialPrefetching: nextConfig.partialPrefetching,
             // A fallback shell can only be upgraded to a concrete version if at
             // least one of its fallback params is a `generateStaticParams`
-            // candidate (`remainingPrerenderableParams`). This gates whether the
-            // per-segment prefetch responses are flagged `isUpgradeableISRFallback`.
-            isFallbackUpgradeable: remainingPrerenderableParams.length > 0,
+            // candidate (`remainingPrerenderableParams`), and only when Partial
+            // Prefetching is enabled (the upgrade itself is gated on it below).
+            // This gates whether the per-segment prefetch responses are flagged
+            // `isUpgradeableISRFallback`; without an upgrade to wait for, the
+            // client should not retry the prefetch.
+            isFallbackUpgradeable:
+              Boolean(nextConfig.partialPrefetching) &&
+              remainingPrerenderableParams.length > 0,
             validationLevel:
               nextConfig.experimental.instantInsights.validationLevel,
             experimental: {
@@ -1277,6 +1282,13 @@ export function createAppPageEntrypoint({
                 if (
                   !isMinimalMode &&
                   isRoutePPREnabled &&
+                  // Upgrading a fallback shell into a more specific ISR entry on
+                  // the first request is only done when Partial Prefetching is
+                  // enabled, mirroring the `partialFallback` flag the adapter
+                  // emits for deployments. Without it, a single prefetch could
+                  // trigger an unbounded number of background ISR writes. The
+                  // shell is still served; it just isn't specialized per param.
+                  Boolean(nextConfig.partialPrefetching) &&
                   // Match the build-time contract: only fallback shells that can
                   // still be completed with prerenderable params should upgrade.
                   remainingPrerenderableParams.length > 0 &&
