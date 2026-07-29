@@ -54,7 +54,7 @@ pub async fn update_ecmascript_hmr_chunk_content(
                 // Module was modified
                 let entries = match &entries_ref {
                     Some(entries) => entries,
-                    None => entries_ref.insert(content.hmr_entries().await?),
+                    None => entries_ref.insert(content.entries().await?),
                 };
                 if let Some(entry) = entries.get(id) {
                     modified.insert(id.clone(), entry.code);
@@ -71,7 +71,7 @@ pub async fn update_ecmascript_hmr_chunk_content(
         if !from.entries_hashes.contains_key(id) {
             let entries = match &entries_ref {
                 Some(entries) => entries,
-                None => entries_ref.insert(content.hmr_entries().await?),
+                None => entries_ref.insert(content.entries().await?),
             };
             if let Some(entry) = entries.get(id) {
                 added.insert(id.clone(), (*hash, entry.code));

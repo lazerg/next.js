@@ -51,11 +51,6 @@ impl EcmascriptBuildNodeChunkContent {
         }
         .cell()
     }
-
-    #[turbo_tasks::function]
-    pub(crate) fn entries(&self) -> Vc<EcmascriptChunkContentEntries> {
-        EcmascriptChunkContentEntries::new(*self.content)
-    }
 }
 
 #[turbo_tasks::value_impl]
@@ -96,16 +91,6 @@ impl EcmascriptBuildNodeChunkContent {
         }
 
         Ok(code.cell())
-    }
-
-    #[turbo_tasks::function]
-    pub(crate) async fn own_version(&self) -> Result<Vc<EcmascriptChunkVersion>> {
-        Ok(EcmascriptChunkVersion::new(
-            self.chunking_context.output_root().owned().await?,
-            self.chunk.path().owned().await?,
-            *self.content,
-            *self.chunking_context.minify_type().await?,
-        ))
     }
 }
 
@@ -151,13 +136,18 @@ impl VersionedContent for EcmascriptBuildNodeChunkContent {
 #[turbo_tasks::value_impl]
 impl EcmascriptHmrChunkContent for EcmascriptBuildNodeChunkContent {
     #[turbo_tasks::function]
-    fn hmr_entries(self: Vc<Self>) -> Vc<EcmascriptChunkContentEntries> {
-        self.entries()
+    fn entries(&self) -> Vc<EcmascriptChunkContentEntries> {
+        EcmascriptChunkContentEntries::new(*self.content)
     }
 
     #[turbo_tasks::function]
-    fn own_version(self: Vc<Self>) -> Vc<EcmascriptChunkVersion> {
-        self.own_version()
+    async fn own_version(&self) -> Result<Vc<EcmascriptChunkVersion>> {
+        Ok(EcmascriptChunkVersion::new(
+            self.chunking_context.output_root().owned().await?,
+            self.chunk.path().owned().await?,
+            *self.content,
+            *self.chunking_context.minify_type().await?,
+        ))
     }
 }
 

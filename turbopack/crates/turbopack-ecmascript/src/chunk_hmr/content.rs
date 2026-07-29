@@ -31,7 +31,7 @@ pub enum EcmascriptChunkPlatform {
 pub trait EcmascriptHmrChunkContent: VersionedContent {
     /// The per-module code and hashes making up this chunk.
     #[turbo_tasks::function]
-    fn hmr_entries(self: Vc<Self>) -> Vc<EcmascriptChunkContentEntries>;
+    fn entries(self: Vc<Self>) -> Vc<EcmascriptChunkContentEntries>;
 
     /// This chunk's own version, used as the `to` side of a diff.
     #[turbo_tasks::function]

@@ -60,24 +60,6 @@ impl EcmascriptBrowserChunkContent {
     }
 
     #[turbo_tasks::function]
-    pub fn entries(&self) -> Vc<EcmascriptChunkContentEntries> {
-        EcmascriptChunkContentEntries::new(*self.content)
-    }
-}
-
-#[turbo_tasks::value_impl]
-impl EcmascriptBrowserChunkContent {
-    #[turbo_tasks::function]
-    pub(crate) async fn own_version(&self) -> Result<Vc<EcmascriptChunkVersion>> {
-        Ok(EcmascriptChunkVersion::new(
-            self.chunking_context.output_root().owned().await?,
-            self.chunk.path().owned().await?,
-            *self.content,
-            *self.chunking_context.minify_type().await?,
-        ))
-    }
-
-    #[turbo_tasks::function]
     pub(crate) async fn code(self: Vc<Self>) -> Result<Vc<Code>> {
         let this = self.await?;
         let source_maps = *this
@@ -187,13 +169,18 @@ impl VersionedContent for EcmascriptBrowserChunkContent {
 #[turbo_tasks::value_impl]
 impl EcmascriptHmrChunkContent for EcmascriptBrowserChunkContent {
     #[turbo_tasks::function]
-    fn hmr_entries(self: Vc<Self>) -> Vc<EcmascriptChunkContentEntries> {
-        self.entries()
+    fn entries(&self) -> Vc<EcmascriptChunkContentEntries> {
+        EcmascriptChunkContentEntries::new(*self.content)
     }
 
     #[turbo_tasks::function]
-    fn own_version(self: Vc<Self>) -> Vc<EcmascriptChunkVersion> {
-        self.own_version()
+    async fn own_version(&self) -> Result<Vc<EcmascriptChunkVersion>> {
+        Ok(EcmascriptChunkVersion::new(
+            self.chunking_context.output_root().owned().await?,
+            self.chunk.path().owned().await?,
+            *self.content,
+            *self.chunking_context.minify_type().await?,
+        ))
     }
 }
 

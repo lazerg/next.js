@@ -87,7 +87,7 @@ pub async fn update_ecmascript_merged_chunk(
         .contents
         .iter()
         .map(|content| async move {
-            let entries = content.hmr_entries().await?;
+            let entries = content.entries().await?;
             let version = content.own_version().await?;
             Ok((*content, entries, version))
         })
