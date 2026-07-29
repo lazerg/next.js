@@ -8,16 +8,16 @@ use turbopack_core::{
 };
 
 use crate::{
-    chunk_hmr::{
-        content::EcmascriptHmrChunkContent,
-        merged_content::EcmascriptMergedChunkContent,
-        merged_version::EcmascriptMergedChunkVersion,
-        update::{EcmascriptChunkUpdate, update_ecmascript_hmr_chunk_content},
-        version::EcmascriptChunkVersion,
-    },
     chunk_list::merged_update::{
         EcmascriptMergedChunkAdded, EcmascriptMergedChunkDeleted, EcmascriptMergedChunkPartial,
         EcmascriptMergedChunkUpdate, EcmascriptMergedUpdate, EcmascriptModuleEntry,
+    },
+    hmr::{
+        EcmascriptHmrChunkContent,
+        chunk_update::{EcmascriptChunkUpdate, update_ecmascript_hmr_chunk_content},
+        chunk_version::EcmascriptChunkVersion,
+        content::EcmascriptMergedChunkContent,
+        version::EcmascriptMergedChunkVersion,
     },
 };
 

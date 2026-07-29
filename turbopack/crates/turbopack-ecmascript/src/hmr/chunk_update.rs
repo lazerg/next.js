@@ -9,11 +9,11 @@ use turbopack_core::{
 };
 
 use crate::{
-    chunk_hmr::{content::EcmascriptHmrChunkContent, version::EcmascriptChunkVersion},
     chunk_list::merged_update::{
         EcmascriptMergedChunkPartial, EcmascriptMergedChunkUpdate, EcmascriptMergedUpdate,
         EcmascriptModuleEntry,
     },
+    hmr::{EcmascriptHmrChunkContent, chunk_version::EcmascriptChunkVersion},
 };
 
 /// The module-level difference between two versions of a single chunk.

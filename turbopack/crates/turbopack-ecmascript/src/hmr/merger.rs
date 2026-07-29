@@ -2,9 +2,7 @@ use anyhow::{Result, bail};
 use turbo_tasks::{ResolvedVc, TryJoinIterExt, Vc};
 use turbopack_core::version::{VersionedContent, VersionedContentMerger, VersionedContents};
 
-use crate::chunk_hmr::{
-    content::EcmascriptHmrChunkContent, merged_content::EcmascriptMergedChunkContent,
-};
+use crate::hmr::{EcmascriptHmrChunkContent, content::EcmascriptMergedChunkContent};
 
 /// Merges multiple [`EcmascriptHmrChunkContent`] into a single
 /// [`EcmascriptMergedChunkContent`]. This allows the chunk list to produce a

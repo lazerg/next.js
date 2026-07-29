@@ -4,7 +4,7 @@ use turbo_tasks::{ReadRef, TryJoinIterExt, Vc};
 use turbo_tasks_hash::{Xxh3Hash64Hasher, encode_base64};
 use turbopack_core::version::Version;
 
-use crate::chunk_hmr::version::EcmascriptChunkVersion;
+use crate::hmr::chunk_version::EcmascriptChunkVersion;
 
 /// The version of a [`super::content::EcmascriptMergedChunkContent`]. This is
 /// essentially a composite [`EcmascriptChunkVersion`].

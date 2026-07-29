@@ -5,14 +5,14 @@ use turbopack_core::{
     version::{Update, Version, VersionedContent},
 };
 
-use crate::chunk_hmr::{
-    content::EcmascriptHmrChunkContent, merged_update::update_ecmascript_merged_chunk,
-    merged_version::EcmascriptMergedChunkVersion,
+use crate::hmr::{
+    EcmascriptHmrChunkContent, update::update_ecmascript_merged_chunk,
+    version::EcmascriptMergedChunkVersion,
 };
 
 /// Composite [`VersionedContent`] that is the result of merging multiple
 /// Ecmascript chunk contents together through the
-/// [`super::merged_merger::EcmascriptChunkContentMerger`]. This allows a chunk
+/// [`super::merger::EcmascriptChunkContentMerger`]. This allows a chunk
 /// list to produce a single `EcmascriptMergedUpdate` for multiple chunks updating
 /// at the same time.
 ///

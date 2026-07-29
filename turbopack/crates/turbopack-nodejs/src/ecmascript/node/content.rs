@@ -13,9 +13,9 @@ use turbopack_core::{
 };
 use turbopack_ecmascript::{
     chunk::{EcmascriptChunkContent, EcmascriptChunkContentEntries},
-    chunk_hmr::{
-        content::EcmascriptHmrChunkContent, merged_merger::EcmascriptChunkContentMerger,
-        update::update_ecmascript_hmr_chunk, version::EcmascriptChunkVersion,
+    hmr::{
+        EcmascriptHmrChunkContent, chunk_update::update_ecmascript_hmr_chunk,
+        chunk_version::EcmascriptChunkVersion, merger::EcmascriptChunkContentMerger,
     },
     minify::minify,
     utils::StringifyJs,

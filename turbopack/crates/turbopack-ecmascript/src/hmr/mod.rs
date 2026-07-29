@@ -1,7 +1,19 @@
 use turbo_tasks::Vc;
 use turbopack_core::version::VersionedContent;
 
-use crate::{chunk::EcmascriptChunkContentEntries, chunk_hmr::version::EcmascriptChunkVersion};
+use crate::{chunk::EcmascriptChunkContentEntries, hmr::chunk_version::EcmascriptChunkVersion};
+
+/// Diffing and merging of Ecmascript chunk contents for hot module replacement.
+///
+/// The `chunk_*` modules operate on a single chunk; the unprefixed modules
+/// operate on a merged set of chunks, which is what a chunk list produces a
+/// single update from.
+pub mod chunk_update;
+pub mod chunk_version;
+pub mod content;
+pub mod merger;
+pub mod update;
+pub mod version;
 
 /// An Ecmascript chunk content that participates in HMR.
 ///
