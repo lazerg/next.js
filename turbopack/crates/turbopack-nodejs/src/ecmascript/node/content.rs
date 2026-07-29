@@ -14,10 +14,8 @@ use turbopack_core::{
 use turbopack_ecmascript::{
     chunk::{EcmascriptChunkContent, EcmascriptChunkContentEntries},
     chunk_hmr::{
-        content::{EcmascriptChunkPlatform, EcmascriptHmrChunkContent},
-        merged_merger::EcmascriptChunkContentMerger,
-        update::update_ecmascript_hmr_chunk,
-        version::EcmascriptChunkVersion,
+        content::EcmascriptHmrChunkContent, merged_merger::EcmascriptChunkContentMerger,
+        update::update_ecmascript_hmr_chunk, version::EcmascriptChunkVersion,
     },
     minify::minify,
     utils::StringifyJs,
@@ -155,8 +153,6 @@ impl EcmascriptHmrChunkContent for EcmascriptBuildNodeChunkContent {
 impl MergeableVersionedContent for EcmascriptBuildNodeChunkContent {
     #[turbo_tasks::function]
     fn get_merger(&self) -> Vc<Box<dyn VersionedContentMerger>> {
-        Vc::upcast(EcmascriptChunkContentMerger::new(
-            EcmascriptChunkPlatform::NodeJs,
-        ))
+        Vc::upcast(EcmascriptChunkContentMerger::new())
     }
 }

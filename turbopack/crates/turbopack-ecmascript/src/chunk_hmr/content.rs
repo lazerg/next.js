@@ -1,25 +1,7 @@
-use bincode::{Decode, Encode};
-use serde::{Deserialize, Serialize};
-use turbo_tasks::{Vc, trace::TraceRawVcs};
+use turbo_tasks::Vc;
 use turbopack_core::version::VersionedContent;
 
 use crate::{chunk::EcmascriptChunkContentEntries, chunk_hmr::version::EcmascriptChunkVersion};
-
-/// Which runtime a chunk was produced for.
-///
-/// Only used to keep otherwise-identical per-runtime cells distinct. In
-/// particular the [`super::merged_merger::EcmascriptChunkContentMerger`]
-/// must not be a singleton across runtimes, or a chunk list containing both
-/// browser and node chunks would merge them into a single update.
-#[turbo_tasks::task_input]
-#[derive(
-    Eq, PartialEq, Debug, Clone, Copy, Hash, TraceRawVcs, Serialize, Deserialize, Encode, Decode,
-)]
-#[serde(rename_all = "kebab-case")]
-pub enum EcmascriptChunkPlatform {
-    Browser,
-    NodeJs,
-}
 
 /// An Ecmascript chunk content that participates in HMR.
 ///
