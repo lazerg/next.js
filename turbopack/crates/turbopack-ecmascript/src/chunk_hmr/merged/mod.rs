@@ -1,4 +1,4 @@
 pub mod content;
-pub mod merged;
+pub mod merger;
 pub mod update;
 pub mod version;

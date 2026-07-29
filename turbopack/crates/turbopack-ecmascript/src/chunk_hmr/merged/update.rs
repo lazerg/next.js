@@ -3,35 +3,40 @@ use std::sync::Arc;
 use anyhow::Result;
 use turbo_tasks::{FxIndexMap, ReadRef, ResolvedVc, TryJoinIterExt, Vc};
 use turbopack_core::{
-    chunk::{ChunkingContext, ModuleId},
-    output::OutputAsset,
+    chunk::ModuleId,
     version::{PartialUpdate, TotalUpdate, Update, Version},
 };
-use turbopack_ecmascript::{
-    chunk_hmr::version::EcmascriptHmrChunkVersion,
+
+use crate::{
+    chunk_hmr::{
+        content::EcmascriptHmrChunkContent,
+        merged::{
+            content::EcmascriptHmrMergedChunkContent, version::EcmascriptHmrMergedChunkVersion,
+        },
+        update::{EcmascriptHmrChunkUpdate, update_ecmascript_hmr_chunk_content},
+        version::EcmascriptHmrChunkVersion,
+    },
     chunk_list::merged_update::{
         EcmascriptMergedChunkAdded, EcmascriptMergedChunkDeleted, EcmascriptMergedChunkPartial,
         EcmascriptMergedChunkUpdate, EcmascriptMergedUpdate, EcmascriptModuleEntry,
     },
 };
 
-use crate::ecmascript::node::{
-    merged::{
-        content::EcmascriptBuildNodeMergedChunkContent,
-        version::EcmascriptBuildNodeMergedChunkVersion,
-    },
-    update::{NodeChunkUpdate, update_ecmascript_node_chunk_content},
-};
-
+/// Helper structure to get a module's hash from multiple different chunk
+/// versions, without having to actually merge the versions into a single
+/// hashmap, which would be expensive.
 struct MergedModuleMap {
     versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>,
 }
 
 impl MergedModuleMap {
+    /// Creates a new `MergedModuleMap` from the given versions.
     fn new(versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>) -> Self {
         Self { versions }
     }
 
+    /// Returns the hash of the module with the given id, or `None` if the
+    /// module is not present in any of the versions.
     fn get(&self, id: &ModuleId) -> Option<u128> {
         for version in &self.versions {
             if let Some(hash) = version.entries_hashes.get(id) {
@@ -42,16 +47,19 @@ impl MergedModuleMap {
     }
 }
 
-pub(crate) async fn update_ecmascript_merged_chunk(
-    content: Vc<EcmascriptBuildNodeMergedChunkContent>,
+/// Computes a single [`Update`] covering every chunk in a merged chunk content.
+///
+/// Runtime-agnostic: both the browser and node chunk lists share this one
+/// implementation.
+pub async fn update_ecmascript_merged_chunk(
+    content: Vc<EcmascriptHmrMergedChunkContent>,
     from_version: ResolvedVc<Box<dyn Version>>,
 ) -> Result<Update> {
     let to_merged_version = content.version();
-    let from_merged_version = if let Some(from) =
-        ResolvedVc::try_downcast_type::<EcmascriptBuildNodeMergedChunkVersion>(from_version)
-    {
-        from
-    } else {
+    let Some(from_merged_version) =
+        ResolvedVc::try_downcast_type::<EcmascriptHmrMergedChunkVersion>(from_version)
+    else {
+        // It's likely `from_version` is `NotFoundVersion`.
         return Ok(Update::Total(TotalUpdate {
             to: Vc::upcast::<Box<dyn Version>>(to_merged_version)
                 .into_trait_ref()
@@ -62,6 +70,7 @@ pub(crate) async fn update_ecmascript_merged_chunk(
     let to = to_merged_version.await?;
     let from = from_merged_version.await?;
 
+    // When to and from point to the same value we can skip comparing them
     if from.ptr_eq(&to) {
         return Ok(Update::None);
     }
@@ -79,32 +88,26 @@ pub(crate) async fn update_ecmascript_merged_chunk(
         .contents
         .iter()
         .map(|content| async move {
-            let entries = content.entries().await?;
-            let content_ref = content.await?;
-            let output_root = content_ref.chunking_context.output_root().await?;
-            let path = content_ref.chunk.path().await?;
-            Ok((*content, entries, output_root, path))
+            let entries = content.hmr_entries().await?;
+            let version = content.own_hmr_version().await?;
+            Ok((*content, entries, version))
         })
         .try_join()
         .await?;
 
     let mut merged_update = EcmascriptMergedUpdate::default();
 
-    for (content, entries, output_root, path) in &to_contents {
-        let Some(chunk_path) = output_root.get_path_to(path) else {
-            continue;
-        };
+    for (content, entries, to_version) in &to_contents {
+        let chunk_path = to_version.chunk_path.as_str();
 
         let chunk_update = if let Some(from_version) =
             from_versions_by_chunk_path.swap_remove(chunk_path)
         {
             // Reuse the single-chunk diff so the merged path stays in sync with
             // the standalone chunk update path.
-            let to_version = content.own_version().await?;
-            match update_ecmascript_node_chunk_content(**content, &to_version, from_version).await?
-            {
-                NodeChunkUpdate::None => continue,
-                NodeChunkUpdate::Partial {
+            match update_ecmascript_hmr_chunk_content(**content, to_version, from_version).await? {
+                EcmascriptHmrChunkUpdate::None => continue,
+                EcmascriptHmrChunkUpdate::Partial {
                     added,
                     modified,
                     deleted,
@@ -119,7 +122,7 @@ pub(crate) async fn update_ecmascript_merged_chunk(
                         if merged_module_map.get(&module_id) != Some(module_hash) {
                             let entry = EcmascriptModuleEntry::from_code(
                                 &module_id,
-                                module_code,
+                                *module_code,
                                 chunk_path,
                             )
                             .await?;
@@ -131,7 +134,7 @@ pub(crate) async fn update_ecmascript_merged_chunk(
 
                     for (module_id, module_code) in modified {
                         let entry =
-                            EcmascriptModuleEntry::from_code(&module_id, module_code, chunk_path)
+                            EcmascriptModuleEntry::from_code(&module_id, *module_code, chunk_path)
                                 .await?;
                         merged_update.entries.insert(module_id, entry);
                     }
@@ -169,7 +172,7 @@ pub(crate) async fn update_ecmascript_merged_chunk(
         );
     }
 
-    let update = if merged_update.is_empty() {
+    Ok(if merged_update.is_empty() {
         Update::None
     } else {
         Update::Partial(PartialUpdate {
@@ -178,7 +181,5 @@ pub(crate) async fn update_ecmascript_merged_chunk(
                 .await?,
             instruction: Arc::new(serde_json::to_value(&merged_update)?),
         })
-    };
-
-    Ok(update)
+    })
 }

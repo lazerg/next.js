@@ -3,17 +3,19 @@ use turbo_rcstr::RcStr;
 use turbo_tasks::{ReadRef, TryJoinIterExt, Vc};
 use turbo_tasks_hash::{Xxh3Hash64Hasher, encode_base64};
 use turbopack_core::version::Version;
-use turbopack_ecmascript::chunk_hmr::version::EcmascriptHmrChunkVersion;
 
-/// The version of a [`super::content::EcmascriptBuildNodeMergedChunkContent`].
+use crate::chunk_hmr::version::EcmascriptHmrChunkVersion;
+
+/// The version of a [`super::content::EcmascriptHmrMergedChunkContent`]. This is
+/// essentially a composite [`EcmascriptHmrChunkVersion`].
 #[turbo_tasks::value(serialization = "skip", shared)]
-pub(crate) struct EcmascriptBuildNodeMergedChunkVersion {
+pub struct EcmascriptHmrMergedChunkVersion {
     #[turbo_tasks(trace_ignore)]
-    pub(super) versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>,
+    pub versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>,
 }
 
 #[turbo_tasks::value_impl]
-impl Version for EcmascriptBuildNodeMergedChunkVersion {
+impl Version for EcmascriptHmrMergedChunkVersion {
     #[turbo_tasks::function]
     async fn id(&self) -> Result<Vc<RcStr>> {
         let mut hasher = Xxh3Hash64Hasher::new();
@@ -22,6 +24,8 @@ impl Version for EcmascriptBuildNodeMergedChunkVersion {
             let mut sorted_ids = self
                 .versions
                 .iter()
+                // This `ReadRef::cell` call is important: it ensures the id is
+                // computed from a cell, so it is cached.
                 .map(|version| ReadRef::cell(version.clone()).id())
                 .try_join()
                 .await?;
