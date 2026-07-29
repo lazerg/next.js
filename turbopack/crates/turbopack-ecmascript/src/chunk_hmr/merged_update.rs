@@ -10,11 +10,10 @@ use turbopack_core::{
 use crate::{
     chunk_hmr::{
         content::EcmascriptHmrChunkContent,
-        merged::{
-            content::EcmascriptHmrMergedChunkContent, version::EcmascriptHmrMergedChunkVersion,
-        },
-        update::{EcmascriptHmrChunkUpdate, update_ecmascript_hmr_chunk_content},
-        version::EcmascriptHmrChunkVersion,
+        merged_content::EcmascriptMergedChunkContent,
+        merged_version::EcmascriptMergedChunkVersion,
+        update::{EcmascriptChunkUpdate, update_ecmascript_hmr_chunk_content},
+        version::EcmascriptChunkVersion,
     },
     chunk_list::merged_update::{
         EcmascriptMergedChunkAdded, EcmascriptMergedChunkDeleted, EcmascriptMergedChunkPartial,
@@ -26,12 +25,12 @@ use crate::{
 /// versions, without having to actually merge the versions into a single
 /// hashmap, which would be expensive.
 struct MergedModuleMap {
-    versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>,
+    versions: Vec<ReadRef<EcmascriptChunkVersion>>,
 }
 
 impl MergedModuleMap {
     /// Creates a new `MergedModuleMap` from the given versions.
-    fn new(versions: Vec<ReadRef<EcmascriptHmrChunkVersion>>) -> Self {
+    fn new(versions: Vec<ReadRef<EcmascriptChunkVersion>>) -> Self {
         Self { versions }
     }
 
@@ -52,12 +51,12 @@ impl MergedModuleMap {
 /// Runtime-agnostic: both the browser and node chunk lists share this one
 /// implementation.
 pub async fn update_ecmascript_merged_chunk(
-    content: Vc<EcmascriptHmrMergedChunkContent>,
+    content: Vc<EcmascriptMergedChunkContent>,
     from_version: ResolvedVc<Box<dyn Version>>,
 ) -> Result<Update> {
     let to_merged_version = content.version();
     let Some(from_merged_version) =
-        ResolvedVc::try_downcast_type::<EcmascriptHmrMergedChunkVersion>(from_version)
+        ResolvedVc::try_downcast_type::<EcmascriptMergedChunkVersion>(from_version)
     else {
         // It's likely `from_version` is `NotFoundVersion`.
         return Ok(Update::Total(TotalUpdate {
@@ -89,7 +88,7 @@ pub async fn update_ecmascript_merged_chunk(
         .iter()
         .map(|content| async move {
             let entries = content.hmr_entries().await?;
-            let version = content.own_hmr_version().await?;
+            let version = content.own_version().await?;
             Ok((*content, entries, version))
         })
         .try_join()
@@ -106,8 +105,8 @@ pub async fn update_ecmascript_merged_chunk(
             // Reuse the single-chunk diff so the merged path stays in sync with
             // the standalone chunk update path.
             match update_ecmascript_hmr_chunk_content(**content, to_version, from_version).await? {
-                EcmascriptHmrChunkUpdate::None => continue,
-                EcmascriptHmrChunkUpdate::Partial {
+                EcmascriptChunkUpdate::None => continue,
+                EcmascriptChunkUpdate::Partial {
                     added,
                     modified,
                     deleted,

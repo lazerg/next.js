@@ -6,7 +6,7 @@ use turbo_tasks::{ResolvedVc, Vc};
 use turbo_tasks_testing::{Registration, register, run_once};
 use turbopack_core::version::VersionedContentMerger;
 use turbopack_ecmascript::chunk_hmr::{
-    content::EcmascriptChunkPlatform, merged::merger::EcmascriptHmrChunkContentMerger,
+    content::EcmascriptChunkPlatform, merged_merger::EcmascriptChunkContentMerger,
 };
 
 static REGISTRATION: Registration = register!();
@@ -19,17 +19,17 @@ struct Mergers(Vec<ResolvedVc<Box<dyn VersionedContentMerger>>>);
 #[turbo_tasks::function(operation, root)]
 async fn resolve_mergers() -> anyhow::Result<Vc<Mergers>> {
     let browser = ResolvedVc::upcast(
-        EcmascriptHmrChunkContentMerger::new(EcmascriptChunkPlatform::Browser)
+        EcmascriptChunkContentMerger::new(EcmascriptChunkPlatform::Browser)
             .to_resolved()
             .await?,
     );
     let node = ResolvedVc::upcast(
-        EcmascriptHmrChunkContentMerger::new(EcmascriptChunkPlatform::NodeJs)
+        EcmascriptChunkContentMerger::new(EcmascriptChunkPlatform::NodeJs)
             .to_resolved()
             .await?,
     );
     let browser_again = ResolvedVc::upcast(
-        EcmascriptHmrChunkContentMerger::new(EcmascriptChunkPlatform::Browser)
+        EcmascriptChunkContentMerger::new(EcmascriptChunkPlatform::Browser)
             .to_resolved()
             .await?,
     );

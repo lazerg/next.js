@@ -18,14 +18,14 @@ use crate::chunk::{EcmascriptChunkContent, EcmascriptChunkContentEntries};
 /// in the hash because minification changes the emitted bytes without changing
 /// any module's own hash.
 #[turbo_tasks::value(serialization = "skip")]
-pub struct EcmascriptHmrChunkVersion {
+pub struct EcmascriptChunkVersion {
     pub chunk_path: RcStr,
     pub minify_type: MinifyType,
     pub entries_hashes: FxIndexMap<ModuleId, u128>,
 }
 
 #[turbo_tasks::value_impl]
-impl EcmascriptHmrChunkVersion {
+impl EcmascriptChunkVersion {
     #[turbo_tasks::function]
     pub async fn new(
         output_root: FileSystemPath,
@@ -45,7 +45,7 @@ impl EcmascriptHmrChunkVersion {
             .into_iter()
             .collect();
 
-        Ok(EcmascriptHmrChunkVersion {
+        Ok(EcmascriptChunkVersion {
             chunk_path: chunk_path.into(),
             minify_type,
             entries_hashes,
@@ -55,7 +55,7 @@ impl EcmascriptHmrChunkVersion {
 }
 
 #[turbo_tasks::value_impl]
-impl Version for EcmascriptHmrChunkVersion {
+impl Version for EcmascriptChunkVersion {
     #[turbo_tasks::function]
     fn id(&self) -> Vc<RcStr> {
         let mut hasher = Xxh3Hash64Hasher::new();

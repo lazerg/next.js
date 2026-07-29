@@ -3,12 +3,12 @@ use serde::{Deserialize, Serialize};
 use turbo_tasks::{Vc, trace::TraceRawVcs};
 use turbopack_core::version::VersionedContent;
 
-use crate::{chunk::EcmascriptChunkContentEntries, chunk_hmr::version::EcmascriptHmrChunkVersion};
+use crate::{chunk::EcmascriptChunkContentEntries, chunk_hmr::version::EcmascriptChunkVersion};
 
 /// Which runtime a chunk was produced for.
 ///
 /// Only used to keep otherwise-identical per-runtime cells distinct. In
-/// particular the [`super::merged::merger::EcmascriptHmrChunkContentMerger`]
+/// particular the [`super::merged_merger::EcmascriptChunkContentMerger`]
 /// must not be a singleton across runtimes, or a chunk list containing both
 /// browser and node chunks would merge them into a single update.
 #[turbo_tasks::task_input]
@@ -35,5 +35,5 @@ pub trait EcmascriptHmrChunkContent: VersionedContent {
 
     /// This chunk's own version, used as the `to` side of a diff.
     #[turbo_tasks::function]
-    fn own_hmr_version(self: Vc<Self>) -> Vc<EcmascriptHmrChunkVersion>;
+    fn own_version(self: Vc<Self>) -> Vc<EcmascriptChunkVersion>;
 }

@@ -9,7 +9,7 @@ use turbopack_core::{
 };
 
 use crate::{
-    chunk_hmr::{content::EcmascriptHmrChunkContent, version::EcmascriptHmrChunkVersion},
+    chunk_hmr::{content::EcmascriptHmrChunkContent, version::EcmascriptChunkVersion},
     chunk_list::merged_update::{
         EcmascriptMergedChunkPartial, EcmascriptMergedChunkUpdate, EcmascriptMergedUpdate,
         EcmascriptModuleEntry,
@@ -17,7 +17,7 @@ use crate::{
 };
 
 /// The module-level difference between two versions of a single chunk.
-pub enum EcmascriptHmrChunkUpdate {
+pub enum EcmascriptChunkUpdate {
     None,
     Partial {
         /// Added modules, keyed by id, with their content hash (used by the
@@ -34,9 +34,9 @@ pub enum EcmascriptHmrChunkUpdate {
 /// on top of them, share this one implementation.
 pub async fn update_ecmascript_hmr_chunk_content(
     content: Vc<Box<dyn EcmascriptHmrChunkContent>>,
-    to: &ReadRef<EcmascriptHmrChunkVersion>,
-    from: &ReadRef<EcmascriptHmrChunkVersion>,
-) -> Result<EcmascriptHmrChunkUpdate> {
+    to: &ReadRef<EcmascriptChunkVersion>,
+    from: &ReadRef<EcmascriptChunkVersion>,
+) -> Result<EcmascriptChunkUpdate> {
     let mut added = FxIndexMap::default();
     let mut modified = FxIndexMap::default();
     let mut deleted = FxIndexMap::default();
@@ -81,9 +81,9 @@ pub async fn update_ecmascript_hmr_chunk_content(
 
     Ok(
         if added.is_empty() && modified.is_empty() && deleted.is_empty() {
-            EcmascriptHmrChunkUpdate::None
+            EcmascriptChunkUpdate::None
         } else {
-            EcmascriptHmrChunkUpdate::Partial {
+            EcmascriptChunkUpdate::Partial {
                 added,
                 modified,
                 deleted,
@@ -101,9 +101,8 @@ pub async fn update_ecmascript_hmr_chunk(
     content: Vc<Box<dyn EcmascriptHmrChunkContent>>,
     from_version: ResolvedVc<Box<dyn Version>>,
 ) -> Result<Update> {
-    let to_version = content.own_hmr_version();
-    let Some(from_version) =
-        ResolvedVc::try_downcast_type::<EcmascriptHmrChunkVersion>(from_version)
+    let to_version = content.own_version();
+    let Some(from_version) = ResolvedVc::try_downcast_type::<EcmascriptChunkVersion>(from_version)
     else {
         // It's likely `from_version` is `NotFoundVersion`.
         return Ok(Update::Total(TotalUpdate {
@@ -126,10 +125,10 @@ pub async fn update_ecmascript_hmr_chunk(
     let mut merged_update = EcmascriptMergedUpdate::default();
 
     match update_ecmascript_hmr_chunk_content(content, &to, &from).await? {
-        EcmascriptHmrChunkUpdate::None => {
+        EcmascriptChunkUpdate::None => {
             return Ok(Update::None);
         }
-        EcmascriptHmrChunkUpdate::Partial {
+        EcmascriptChunkUpdate::Partial {
             added,
             modified,
             deleted,

@@ -15,9 +15,9 @@ use turbopack_ecmascript::{
     chunk::{EcmascriptChunkContent, EcmascriptChunkContentEntries},
     chunk_hmr::{
         content::{EcmascriptChunkPlatform, EcmascriptHmrChunkContent},
-        merged::merger::EcmascriptHmrChunkContentMerger,
+        merged_merger::EcmascriptChunkContentMerger,
         update::update_ecmascript_hmr_chunk,
-        version::EcmascriptHmrChunkVersion,
+        version::EcmascriptChunkVersion,
     },
     minify::minify,
     utils::StringifyJs,
@@ -99,8 +99,8 @@ impl EcmascriptBuildNodeChunkContent {
     }
 
     #[turbo_tasks::function]
-    pub(crate) async fn own_version(&self) -> Result<Vc<EcmascriptHmrChunkVersion>> {
-        Ok(EcmascriptHmrChunkVersion::new(
+    pub(crate) async fn own_version(&self) -> Result<Vc<EcmascriptChunkVersion>> {
+        Ok(EcmascriptChunkVersion::new(
             self.chunking_context.output_root().owned().await?,
             self.chunk.path().owned().await?,
             *self.content,
@@ -156,7 +156,7 @@ impl EcmascriptHmrChunkContent for EcmascriptBuildNodeChunkContent {
     }
 
     #[turbo_tasks::function]
-    fn own_hmr_version(self: Vc<Self>) -> Vc<EcmascriptHmrChunkVersion> {
+    fn own_version(self: Vc<Self>) -> Vc<EcmascriptChunkVersion> {
         self.own_version()
     }
 }
@@ -165,7 +165,7 @@ impl EcmascriptHmrChunkContent for EcmascriptBuildNodeChunkContent {
 impl MergeableVersionedContent for EcmascriptBuildNodeChunkContent {
     #[turbo_tasks::function]
     fn get_merger(&self) -> Vc<Box<dyn VersionedContentMerger>> {
-        Vc::upcast(EcmascriptHmrChunkContentMerger::new(
+        Vc::upcast(EcmascriptChunkContentMerger::new(
             EcmascriptChunkPlatform::NodeJs,
         ))
     }

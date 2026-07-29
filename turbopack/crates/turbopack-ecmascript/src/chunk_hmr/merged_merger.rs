@@ -4,31 +4,31 @@ use turbopack_core::version::{VersionedContent, VersionedContentMerger, Versione
 
 use crate::chunk_hmr::{
     content::{EcmascriptChunkPlatform, EcmascriptHmrChunkContent},
-    merged::content::EcmascriptHmrMergedChunkContent,
+    merged_content::EcmascriptMergedChunkContent,
 };
 
 /// Merges multiple [`EcmascriptHmrChunkContent`] into a single
-/// [`EcmascriptHmrMergedChunkContent`]. This allows the chunk list to produce a
+/// [`EcmascriptMergedChunkContent`]. This allows the chunk list to produce a
 /// single `EcmascriptMergedUpdate` for multiple chunks updating at the same time.
 ///
 /// The `platform` field is load-bearing, not informational: chunk lists group
 /// chunks by merger cell identity, so a single merger shared across runtimes
 /// would merge browser and node chunks into one update.
 #[turbo_tasks::value]
-pub struct EcmascriptHmrChunkContentMerger {
+pub struct EcmascriptChunkContentMerger {
     platform: EcmascriptChunkPlatform,
 }
 
 #[turbo_tasks::value_impl]
-impl EcmascriptHmrChunkContentMerger {
+impl EcmascriptChunkContentMerger {
     #[turbo_tasks::function]
     pub fn new(platform: EcmascriptChunkPlatform) -> Vc<Self> {
-        Self::cell(EcmascriptHmrChunkContentMerger { platform })
+        Self::cell(EcmascriptChunkContentMerger { platform })
     }
 }
 
 #[turbo_tasks::value_impl]
-impl VersionedContentMerger for EcmascriptHmrChunkContentMerger {
+impl VersionedContentMerger for EcmascriptChunkContentMerger {
     #[turbo_tasks::function]
     async fn merge(
         &self,
@@ -49,8 +49,6 @@ impl VersionedContentMerger for EcmascriptHmrChunkContentMerger {
             .try_join()
             .await?;
 
-        Ok(Vc::upcast(
-            EcmascriptHmrMergedChunkContent { contents }.cell(),
-        ))
+        Ok(Vc::upcast(EcmascriptMergedChunkContent { contents }.cell()))
     }
 }

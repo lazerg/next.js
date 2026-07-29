@@ -6,29 +6,33 @@ use turbopack_core::{
 };
 
 use crate::chunk_hmr::{
-    content::EcmascriptHmrChunkContent,
-    merged::{update::update_ecmascript_merged_chunk, version::EcmascriptHmrMergedChunkVersion},
+    content::EcmascriptHmrChunkContent, merged_update::update_ecmascript_merged_chunk,
+    merged_version::EcmascriptMergedChunkVersion,
 };
 
 /// Composite [`VersionedContent`] that is the result of merging multiple
 /// Ecmascript chunk contents together through the
-/// [`super::merger::EcmascriptHmrChunkContentMerger`]. This allows a chunk list
-/// to produce a single `EcmascriptMergedUpdate` for multiple chunks updating at
-/// the same time.
+/// [`super::merged_merger::EcmascriptChunkContentMerger`]. This allows a chunk
+/// list to produce a single `EcmascriptMergedUpdate` for multiple chunks updating
+/// at the same time.
+///
+/// "Merged" here refers to [`turbopack_core::version::VersionedContentMerger`]
+/// combining several chunks into one update payload. It has nothing to do with
+/// sharing this code between the browser and node runtimes.
 #[turbo_tasks::value(serialization = "skip", shared)]
-pub struct EcmascriptHmrMergedChunkContent {
+pub struct EcmascriptMergedChunkContent {
     pub contents: Vec<ResolvedVc<Box<dyn EcmascriptHmrChunkContent>>>,
 }
 
 #[turbo_tasks::value_impl]
-impl EcmascriptHmrMergedChunkContent {
+impl EcmascriptMergedChunkContent {
     #[turbo_tasks::function]
-    pub async fn version(&self) -> Result<Vc<EcmascriptHmrMergedChunkVersion>> {
-        Ok(EcmascriptHmrMergedChunkVersion {
+    pub async fn version(&self) -> Result<Vc<EcmascriptMergedChunkVersion>> {
+        Ok(EcmascriptMergedChunkVersion {
             versions: self
                 .contents
                 .iter()
-                .map(|content| async move { content.own_hmr_version().await })
+                .map(|content| async move { content.own_version().await })
                 .try_join()
                 .await?,
         }
@@ -37,10 +41,10 @@ impl EcmascriptHmrMergedChunkContent {
 }
 
 #[turbo_tasks::value_impl]
-impl VersionedContent for EcmascriptHmrMergedChunkContent {
+impl VersionedContent for EcmascriptMergedChunkContent {
     #[turbo_tasks::function]
     fn content(self: Vc<Self>) -> Result<Vc<AssetContent>> {
-        bail!("EcmascriptHmrMergedChunkContent does not have content")
+        bail!("EcmascriptMergedChunkContent does not have content")
     }
 
     #[turbo_tasks::function]
